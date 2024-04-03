@@ -1,1 +1,5 @@
-spring.application.name=example_reactive_redis
+spring:
+  data:
+    redis:
+      host: localhost
+      port: 26379
