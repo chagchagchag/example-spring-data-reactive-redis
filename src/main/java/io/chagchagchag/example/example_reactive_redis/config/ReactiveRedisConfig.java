@@ -10,8 +10,10 @@ import org.springframework.data.redis.connection.ReactiveRedisConnectionFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
+import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 @AutoConfiguration(after = RedisAutoConfiguration.class)
 public class ReactiveRedisConfig {
@@ -52,5 +54,40 @@ public class ReactiveRedisConfig {
       ReactiveRedisConnectionFactory reactiveRedisConnectionFactory
   ){
     return new ReactiveStringRedisTemplate(reactiveRedisConnectionFactory);
+  }
+
+  @Bean(name = "bookHashTemplate")
+  @ConditionalOnBean(ReactiveRedisConnectionFactory.class)
+  public ReactiveRedisTemplate<String, String> reactiveRedisTemplate(
+      ReactiveRedisConnectionFactory reactiveRedisConnectionFactory
+  ){
+    StringRedisSerializer stringSerializer = new StringRedisSerializer();
+
+    RedisSerializationContext<String, String> serializationContext =
+        RedisSerializationContext
+            .<String, String>newSerializationContext()
+            .key(stringSerializer).value(stringSerializer)
+            .hashKey(stringSerializer).hashValue(stringSerializer)
+            .build();
+
+    return new ReactiveRedisTemplate<>(reactiveRedisConnectionFactory, serializationContext);
+  }
+
+  @Bean(name = "bookSortedSetRedisTemplate")
+  @ConditionalOnBean(ReactiveRedisConnectionFactory.class)
+  public ReactiveRedisTemplate<String, String> bookSortedSetRedisTemplate(
+      ReactiveRedisConnectionFactory reactiveRedisConnectionFactory
+  ){
+    StringRedisSerializer stringSerializer = new StringRedisSerializer();
+    Jackson2JsonRedisSerializer valueSerializer = new Jackson2JsonRedisSerializer<>(String.class);
+
+    RedisSerializationContext<String, String> serializationContext =
+        RedisSerializationContext
+            .<String, String>newSerializationContext()
+            .key(stringSerializer).value(valueSerializer)
+            .hashKey(stringSerializer).hashValue(valueSerializer)
+            .build();
+
+    return new ReactiveRedisTemplate<>(reactiveRedisConnectionFactory, serializationContext);
   }
 }
