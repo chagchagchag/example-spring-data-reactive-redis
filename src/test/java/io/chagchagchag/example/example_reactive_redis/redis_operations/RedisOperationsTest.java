@@ -20,6 +20,7 @@ import org.springframework.data.redis.core.ReactiveHashOperations;
 import org.springframework.data.redis.core.ReactiveHyperLogLogOperations;
 import org.springframework.data.redis.core.ReactiveListOperations;
 import org.springframework.data.redis.core.ReactiveRedisTemplate;
+import org.springframework.data.redis.core.ReactiveSetOperations;
 import org.springframework.data.redis.core.ReactiveStreamOperations;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
@@ -87,6 +88,35 @@ public class RedisOperationsTest {
         .doOnNext(value -> log.info("doOnNext = {}", value))
         .then(listOperations.rightPop(queueWithId))
         .doOnNext(value -> log.info("doOnNext = {}", value))
+        .block();
+  }
+
+  @DisplayName("간단한_ReactiveSetOperations_를_돌려봐요")
+  @Test
+  public void TEST_간단한_ReactiveSetOperations_를_돌려봐요(){
+    // given
+
+    // when
+
+    // then
+    ReactiveSetOperations<Object, Object> setOperations = reactiveRedisTemplate.opsForSet();
+    var setId = "BOOK_PRICES:1";
+
+    setOperations
+        .add(setId, "500")
+        .doOnNext(value -> log.info("doOnNext = {}", value))
+        .then(setOperations.add(setId, "1000","2000","3000"))
+        .doOnNext(value -> log.info("doOnNext = {}", value))
+        .then(setOperations.size(setId))
+        .doOnNext(value -> log.info("doOnNext = {}", value))
+        .thenMany(setOperations.members(setId))
+        .doOnNext(value -> log.info("doOnNext = {}", value))
+        .then(setOperations.isMember(setId, "1000"))
+        .doOnNext(value -> log.info("doOnNext = {}", value))
+        .then(setOperations.isMember(setId,"5000"))
+        .doOnNext(value -> log.info("doOnNext = {}", value))
+        .then(setOperations.remove(setId, "1000"))
+        .doOnError(throwable -> throwable.getMessage())
         .block();
   }
 
